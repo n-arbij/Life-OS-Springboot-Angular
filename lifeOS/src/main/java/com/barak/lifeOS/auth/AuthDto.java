@@ -1,5 +1,8 @@
 package com.barak.lifeOS.auth;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,16 +10,31 @@ public class AuthDto {
 
     @Data
     public static class RegisterDto{
+        @NotBlank(message = "First Name is required")
+        @Size(max = 50, message = "First Name should not exceed 50 characters")
         private String firstName;
-        private String LastName;
+
+        @NotBlank(message = "Last Name is required")
+        @Size(max = 50, message = "Name should not exceed 50 characters")
+        private String lastName;
+
+        @NotBlank(message = "Username is required")
+        @Size(min = 3, max = 75, message = "Username should be between 3 and 75 characters")
         private String username;
+
+        @Email(message = "It must be a valid email")
         private String email;
+
+        @NotBlank(message = "Password is required")
         private String password;
     }
 
     @Data
     public static class LoginDto{
+        @NotBlank(message = "Username is required")
         private String username;
+
+        @NotBlank(message = "Password is required")
         private String password;
     }
 

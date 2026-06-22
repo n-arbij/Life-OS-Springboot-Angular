@@ -2,13 +2,12 @@ package com.barak.lifeOS.user;
 
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,18 +23,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name should not exceed 75 characters")
+    @Column(nullable = false)
     private String name;
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 75, message = "Username should be between 3 and 75 characters")
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Email(message = "Email is required")
+    @Column(nullable = false,  unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
+    @Column(nullable = false)
     private String password;
     
     private boolean deleted = false;
