@@ -1,8 +1,8 @@
 package com.barak.lifeOS.exception;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +15,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,20 +37,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> fieldErrors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+            .collect(Collectors.toMap(
+                e -> e.getField(),
+                e -> e.getDefaultMessage(),
+                (existing, duplicate) -> existing
+            ));
 
-        ErrorResponse response = ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Failed")
-                .message("One or more fields are invalid")
-                .timestamp(LocalDateTime.now())
-                .fieldErrors(fieldErrors)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return build(HttpStatus.BAD_REQUEST, "Validation Failed",
+                "One or more fields are invalid", fieldErrors);
     }
 
     @ExceptionHandler(ForbiddenException.class)
@@ -97,6 +95,19 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "Unauthorized", "This account has been deactivated");
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> fieldErrors = ex.getConstraintViolations().stream()
+            .collect(Collectors.toMap(
+                v -> v.getPropertyPath().toString().replaceAll(".*\\.", ""),
+                v -> v.getMessage(),
+                (existing, duplicate) -> existing
+            ));
+
+        return build(HttpStatus.BAD_REQUEST, "Validation Failed",
+                "One or more fields are invalid", fieldErrors);
+    }
+
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String message) {
         return ResponseEntity.status(status).body(
                 ErrorResponse.builder()
@@ -106,5 +117,16 @@ public class GlobalExceptionHandler {
                         .timestamp(LocalDateTime.now())
                         .build()
         );
+    }
+
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String message,
+        Map<String, String> fieldErrors) {
+        ErrorResponse response = new ErrorResponse();
+        response.setStatus(status.value());
+        response.setError(error);
+        response.setMessage(message);
+        response.setTimestamp(LocalDateTime.now());
+        response.setFieldErrors(fieldErrors);
+        return ResponseEntity.status(status).body(response);
     }
 }
