@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -106,6 +107,19 @@ public class GlobalExceptionHandler {
 
         return build(HttpStatus.BAD_REQUEST, "Validation Failed",
                 "One or more fields are invalid", fieldErrors);
+    }
+    
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String message = "A database constraint was violated";
+
+        if (ex.getMessage() != null && ex.getMessage().contains("cannot be null")) {
+            message = "A required field is missing. Please check your request";
+        } else if (ex.getMessage() != null && ex.getMessage().contains("Duplicate entry")) {
+            message = "A record with this information already exists";
+        }
+
+        return build(HttpStatus.CONFLICT, "Data Integrity Violation", message);
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String message) {
