@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.barak.lifeOS.exception.DuplicateResourceException;
+import com.barak.lifeOS.exception.ResourceNotFoundException;
 import com.barak.lifeOS.security.JwtUtil;
 import com.barak.lifeOS.user.User;
 import com.barak.lifeOS.user.UserRepository;
@@ -23,6 +24,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final PasswordValidation passwordValidation;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthDto.Response register(AuthDto.RegisterDto dto){
         if(userRepository.existsByEmail(dto.getUsername())){
@@ -43,16 +45,38 @@ public class AuthService {
         user.setTimezone(dto.getTimezone());
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(dto.getUsername());
-        return new AuthDto.Response(token, dto.getUsername());
+        String accessToken = jwtUtil.generateToken(dto.getUsername());
+        RefreshToken refreshToken = refreshTokenService.create(user);
+        return new AuthDto.Response(dto.getUsername(), accessToken, refreshToken.getToken());
     }
 
     public AuthDto.Response login(AuthDto.LoginDto dto){
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword())
         );
-        String token = jwtUtil.generateToken(dto.getUsername());
-        return new AuthDto.Response(token, dto.getUsername());
+
+        User user = userRepository.findByUsername(dto.getUsername())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String accessToken = jwtUtil.generateToken(dto.getUsername());
+        RefreshToken refresh = refreshTokenService.create(user);
+
+        return new AuthDto.Response(dto.getUsername(), accessToken, refresh.getToken());
+    }
+
+    public AuthDto.Response refresh(AuthDto.RefreshRequest request){
+        RefreshToken oldToken = refreshTokenService.validate(request.refreshToken());
+
+        RefreshToken newRefreshToken = refreshTokenService.rotate(oldToken);
+
+        String newAccessToken = jwtUtil.generateToken(oldToken.getUser().getUsername());
+
+        return buildResponse(oldToken.getUser(), newAccessToken, newRefreshToken.getToken());
+
+    }
+
+    public void logout(User currentUser) {
+        refreshTokenService.revokeAll(currentUser);
     }
 
     private void validateTimezone(String timezone) {
@@ -61,5 +85,13 @@ public class AuthService {
         } catch (DateTimeException e) {
             throw new IllegalArgumentException("Invalid timezone: " + timezone);
         }
+    }
+
+    private AuthDto.Response buildResponse(User user, String accessToken, String refreshToken) {
+        return new AuthDto.Response(
+            accessToken,
+            refreshToken,
+            user.getUsername()
+        );
     }
 }

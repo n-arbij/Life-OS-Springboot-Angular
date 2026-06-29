@@ -40,10 +40,15 @@ public class AuthDto {
         private String password;
     }
 
+    public record RefreshRequest(
+        @NotBlank String refreshToken
+    ) {}
+
     @Data
     @AllArgsConstructor
     public static class Response{
-        private String token;
         private String username;
+        private String token;
+        private String refresh;
     }
 }

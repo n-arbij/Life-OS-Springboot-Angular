@@ -16,8 +16,8 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${jwt.access-token-expiry}")
+    private long accessTokenExpiry;
 
     private SecretKey getSigningKey(){
         byte[] secretKey = secret.getBytes();
@@ -28,7 +28,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiry))
                 .signWith(getSigningKey())
                 .compact();
     }
