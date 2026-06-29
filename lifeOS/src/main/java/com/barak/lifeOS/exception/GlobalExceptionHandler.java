@@ -122,6 +122,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, "Data Integrity Violation", message);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return build(HttpStatus.BAD_REQUEST, "Invalid Argument", ex.getMessage());
+    }
+
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String error, String message) {
         return ResponseEntity.status(status).body(
                 ErrorResponse.builder()
