@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/habits")
+@RequestMapping("/api/v1/habits")
 public class HabitController {
     private final HabitService habitService;
 

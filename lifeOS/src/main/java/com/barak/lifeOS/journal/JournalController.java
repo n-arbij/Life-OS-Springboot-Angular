@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/journal-entries")
+@RequestMapping("/api/v1/journal-entries")
 public class JournalController {
     private final JournalService journalService;
 
