@@ -1,12 +1,15 @@
 package com.barak.lifeOS.event;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.barak.lifeOS.common.BaseEntity;
 import com.barak.lifeOS.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,6 +38,7 @@ public class Event extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
@@ -63,6 +67,6 @@ public class Event extends BaseEntity{
     @Column(nullable = false)
     private EventStatus eventStatus;
 
-    @OneToMany(mappedBy = "event")
-    private List<EventReminder> reminders;
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventReminder> reminders = new ArrayList<>();
 }

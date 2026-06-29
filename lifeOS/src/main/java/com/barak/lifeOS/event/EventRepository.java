@@ -2,6 +2,7 @@ package com.barak.lifeOS.event;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,8 @@ import com.barak.lifeOS.user.User;
 
 public interface EventRepository extends JpaRepository<Event, UUID>{
     List<Event> findByUserAndStatus(User user, Status status);
+
+    Optional<Event> findByIdAndUser(UUID id, User user);
 
     @Query("""
         SELECT e FROM Event e

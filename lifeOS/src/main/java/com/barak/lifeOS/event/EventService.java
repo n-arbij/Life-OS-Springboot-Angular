@@ -64,6 +64,13 @@ public class EventService {
             .toList();
     }
 
+    public List<EventReminderDto.Response> getRemindersByEvent(UUID eventId){
+        Event event = getEventById(eventId);
+        return reminderRepository.findByEvent(event).stream()
+            .map(EventReminderDto.Response::fromEntity)
+            .toList();
+    }
+
     @Transactional
     public EventDto.Response createEvent(EventDto.CreateRequest request){
 
@@ -87,11 +94,12 @@ public class EventService {
         event.setColor(request.color() != null ? request.color() : "#CB410B");
         event.setStatus(Status.ACTIVE);
         event.setEventStatus(resolveDisplayStatus(event));
+        Event saved = eventRepository.save(event);
 
         List<EventReminder> reminders = request.reminderMinutes() != null ? 
             request.reminderMinutes().stream()
                 .map(minutes -> EventReminder.builder()
-                        .event(event)
+                        .event(saved)
                         .remindBeforeMinutes(minutes)
                         .notified(false)
                         .build())
@@ -102,8 +110,7 @@ public class EventService {
             reminderRepository.saveAll(reminders);
         }
 
-        eventRepository.save(event);
-        return EventDto.Response.fromEntity(event);
+        return EventDto.Response.fromEntity(saved);
     }
 
     @Transactional
@@ -212,12 +219,25 @@ public class EventService {
         return EventDto.Response.fromEntity(event);
     }
 
-    public EventReminderDto.Response addReminder(UUID eventId, Integer minutes){
+    @Transactional
+    public EventReminderDto.Response addReminder(UUID eventId, int minutes){
+        User user = helper.getCurrentUser();
+        Event event = eventRepository.findByIdAndUser(eventId, user).orElseThrow(
+            () -> new ResourceNotFoundException("Event not found with id: " + eventId)
+        );
+
+        boolean alreadyExists = reminderRepository.existsByEventAndRemindBeforeMinutes(event, minutes);
+
+        if(alreadyExists){
+            throw new IllegalArgumentException("A reminder for " + minutes + " minutes already exists for this event");
+        }
         EventReminder reminder = EventReminder.builder()
             .event(getEventById(eventId))
             .remindBeforeMinutes(minutes)
+            .notified(false)
             .build();
         
+        reminderRepository.save(reminder);
         return EventReminderDto.Response.fromEntity(reminder);
     }
 
@@ -226,9 +246,8 @@ public class EventService {
             () -> new ResourceNotFoundException("Event Reminder not found")
         );
 
-        if(!reminder.getEvent().getUser().getId().equals(helper.getCurrentUser().getId())){
-            throw new ForbiddenException("Access denied!");
-        }
+        getEventById(reminder.getEvent().getId());
+        reminderRepository.delete(reminder);
 
         return EventReminderDto.Response.fromEntity(reminder);
     }

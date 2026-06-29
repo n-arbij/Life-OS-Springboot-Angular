@@ -45,14 +45,21 @@ public class EventController {
         return ResponseEntity.ok(eventService.getByDateRange(from, to));
     }
 
+    @GetMapping("/reminders/{eventId}")
+    public ResponseEntity<List<EventReminderDto.Response>> getRemindersByEvent(@PathVariable UUID eventId){
+        return ResponseEntity.ok(eventService.getRemindersByEvent(eventId));
+    }
+
     @PostMapping("/create")
     public ResponseEntity<EventDto.Response> create(@Valid @RequestBody EventDto.CreateRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(request));
     }
 
-    @PostMapping("{id}/reminder")
-    public ResponseEntity<EventReminderDto.Response> addReminder(@PathVariable UUID eventId, @Valid @RequestBody  Integer minutes){
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.addReminder(eventId, minutes));
+    @PostMapping("/{id}/reminders")
+    public ResponseEntity<EventReminderDto.Response> addReminder(
+            @PathVariable UUID id,
+            @RequestParam int minutes) {
+        return ResponseEntity.ok(eventService.addReminder(id, minutes));
     }
 
     @PutMapping("/{id}")

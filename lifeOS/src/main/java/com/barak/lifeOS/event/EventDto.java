@@ -17,7 +17,7 @@ public class EventDto {
        LocalDate endDate,
        boolean allDay,
        String location,
-       @NotBlank String color,
+       String color,
        String recurrenceRule,
        Status status,
        List<Integer> reminderMinutes
@@ -53,7 +53,7 @@ public class EventDto {
         String recurrenceRule,
         Instant createdAt,
         Instant updatedAt,
-        List<EventReminder> reminders
+        List<Integer> remindMinutes
     ) {
         public static Response fromEntity(Event event){
             return new Response(
@@ -70,7 +70,9 @@ public class EventDto {
                 event.getRecurrenceRule(),
                 event.getCreatedAt(),
                 event.getUpdatedAt(),
-                event.getReminders()
+                event.getReminders().stream()
+                .map(EventReminder::getRemindBeforeMinutes)
+                .toList() 
             );
         }
     }
