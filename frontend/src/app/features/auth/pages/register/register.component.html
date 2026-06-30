@@ -1,0 +1,96 @@
+<div class="register-container">
+    <div class="container-header">
+        <h3>Welcome Aboard!</h3>
+    
+        <p id="subtitle">
+            Start organizing your life with LifeOS.
+        </p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="register()">
+        <div class="input-fields">
+            <div class="sect1">
+                <div class="form-group">
+                    <input
+                        type="text"
+                        formControlName="firstName"
+                        placeholder="First Name"
+                        required>
+                </div>
+        
+                <div class="form-group">
+                    <input
+                        type="text"
+                        formControlName="lastName"
+                        placeholder="Last Name"
+                        required>
+                </div>
+        
+                <div class="form-group">
+                    <input
+                        type="text"
+                        formControlName="username"
+                        placeholder="Username"
+                        required>
+                </div>
+            </div>
+    
+            <div class="sect2">
+                <div class="form-group">
+                    <input
+                        type="email"
+                        formControlName="email"
+                        placeholder="Email Address"
+                        required>
+                </div>
+        
+                <div class="form-group">
+                    <input
+                        [type]="showPassword ? 'text' : 'password'"
+                        formControlName="password"
+                        placeholder="Password"
+                        required>
+                </div>
+        
+                <div class="form-group">
+                    <input
+                        [type]="showConfirmPassword ? 'text' : 'password'"
+                        formControlName="confirmPassword"
+                        placeholder="Confirm Password"
+                        required>
+                </div>
+                @if(registerForm.hasError('passwordMismatch')){
+                    <small>
+                        Passwords do not match.
+                    </small>
+                }
+            </div>
+        </div>
+
+        <div class="terms-submit">
+            <label class="terms">
+                <input
+                    type="checkbox"
+                    formControlName="acceptTerms">
+    
+                I agree to the <a href="#">Terms and Conditions</a> .
+    
+            </label>
+    
+            <button
+                type="submit"
+                [disabled]="loading || registerForm.invalid">
+    
+                {{ loading ? 'Creating Account...' : 'Create Account' }}
+            </button>
+        </div>
+    </form>
+
+    <p class="redirect">
+        Already have an account?
+        <a routerLink="/login">
+            Sign In
+        </a>
+    </p>
+
+</div>
