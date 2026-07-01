@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.barak.lifeOS.exception.ResourceNotFoundException;
 import com.barak.lifeOS.user.User;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,14 +20,11 @@ public class RefreshTokenService {
     @Value("${jwt.refresh-token-expiry}")
     private long refreshTokenExpiry;
 
-    public RefreshToken  create(User user){
-        tokenRepository.findByUser(user)
-            .ifPresent(existing -> {
-                existing.setRevoked(true);
-                tokenRepository.save(existing);
-            });
+   @Transactional
+    public RefreshToken create(User user) {
+        RefreshToken token = tokenRepository.findByUser(user)
+            .orElse(new RefreshToken());
 
-        RefreshToken token = new RefreshToken();
         token.setUser(user);
         token.setToken(UUID.randomUUID().toString());
         token.setExpiresAt(Instant.now().plusMillis(refreshTokenExpiry));

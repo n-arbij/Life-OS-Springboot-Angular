@@ -1,0 +1,12 @@
+.dashboard-header{
+    width: 100%;
+    display:flex;
+    justify-content: end;
+    align-items: baseline;
+    padding:2em;
+    background: transparent;
+}
+
+.date-div p{
+    color:#cfcfcf;
+}

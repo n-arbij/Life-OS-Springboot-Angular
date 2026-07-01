@@ -51,7 +51,7 @@ public class AuthDto {
     public static class Response{
         private String token;
         private String refresh;
-        private UserSummary summary;
+        private UserSummary user;
     }
 
     public record UserSummary(UUID id, String email, String username){}
